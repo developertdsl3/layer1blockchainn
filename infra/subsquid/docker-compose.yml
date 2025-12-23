@@ -1,0 +1,47 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres:16
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=myl1_squid
+    ports:
+      - "5432:5432"
+    volumes:
+      - squid-db:/var/lib/postgresql/data
+
+  processor:
+    image: node:20
+    working_dir: /app
+    volumes:
+      - ./:/app
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@db:5432/myl1_squid
+      # For Linux Docker, host.docker.internal isn't always present; we add host-gateway below.
+      - WS_ENDPOINT=${WS_ENDPOINT:-ws://host.docker.internal:9944}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    command: bash -lc "npm install && node src/processor.js"
+
+  graphql:
+    image: node:20
+    working_dir: /app
+    volumes:
+      - ./:/app
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@db:5432/myl1_squid
+      - PORT=4350
+    ports:
+      - "4350:4350"
+    command: bash -lc "npm install && node src/server.js"
+
+volumes:
+  squid-db:
+
+
