@@ -10,10 +10,10 @@ A production-ready Layer-1 blockchain built with Substrate framework, featuring 
 cargo build --release --package myl1-node-cli
 ```
 
-### Run Development Node
+### Run Development Node (single validator)
 
 ```bash
-./target/release/myl1-node --chain dev --alice
+./scripts/run-dev-node.sh
 ```
 
 ### Run Local Testnet (2 Validators)
@@ -26,9 +26,11 @@ cargo build --release --package myl1-node-cli
     --validator \
     --base-path ./alice-fresh \
     --port 30333 \
-    --rpc-port 9944 \
-    --unsafe-rpc-external \
-    --unsafe-force-node-key-generation \
+    --rpc-port 9933 \
+    --ws-port 9944 \
+    --rpc-cors all \
+    --ws-external \
+    --rpc-external \
     --name "MyL1-Alice"
 
 # Terminal 2 - Bob (after getting Alice's peer ID from logs)
@@ -38,11 +40,19 @@ cargo build --release --package myl1-node-cli
     --validator \
     --base-path ./bob-fresh \
     --port 30334 \
-    --rpc-port 9945 \
-    --unsafe-rpc-external \
-    --unsafe-force-node-key-generation \
+    --rpc-port 9934 \
+    --ws-port 9945 \
+    --rpc-cors all \
+    --ws-external \
+    --rpc-external \
     --bootnodes /ip4/127.0.0.1/tcp/30333/p2p/<ALICE_PEER_ID> \
     --name "MyL1-Bob"
+```
+
+### Verify everything locally (Phases 1–4)
+
+```bash
+./scripts/test-all-phases.sh
 ```
 
 ## ✨ Features
@@ -72,7 +82,7 @@ cargo build --release --package myl1-node-cli
 ### ✅ Phase 4: Infrastructure & Monitoring (LOCAL READY)
 - ✅ **Blockchain Explorer** - React-based block explorer
 - ✅ **Wallet Integration** - Web wallet with Polkadot.js
-- ✅ Monitoring: `./scripts/run-monitoring.sh`
+- ✅ Monitoring: `./scripts/run-monitoring.sh` (Prometheus `:9090`, Grafana `:3002`)
 - ✅ Indexing (Subsquid-style): `./scripts/run-subsquid.sh` (GraphQL at `http://127.0.0.1:4350/graphql`)
 - ✅ Full stack (monitoring + explorer + wallet + indexer): `./scripts/run-full-stack.sh`
 
@@ -94,6 +104,9 @@ cargo build --release --package myl1-node-cli
 
 ```
 layer1blockhain/
+├── contracts/               # Ink! + EVM sample contracts
+├── infra/                   # Monitoring + indexing + full-stack compose
+├── tools/                   # Automation test runners (on-chain proofs)
 ├── substrate/bin/node/     # Node and runtime implementation
 │   ├── cli/                # Node CLI
 │   └── runtime/            # Runtime (pallets, consensus)
@@ -104,6 +117,7 @@ layer1blockhain/
 │   ├── PHASE3_SMART_CONTRACTS.md
 │   └── COMPLETE_IMPLEMENTATION_PLAN.md
 ├── scripts/                # Build and test scripts
+├── zombienet/              # Local multi-validator configs
 └── Cargo.toml             # Workspace configuration
 ```
 
@@ -213,8 +227,12 @@ See [Explorer & Wallet Setup Guide](docs/EXPLORER_WALLET_SETUP.md) for details.
 
 When running a node, RPC is available at:
 
-- **HTTP**: `http://localhost:9944`
+- **HTTP**: `http://localhost:9933`
 - **WebSocket**: `ws://localhost:9944`
+
+If you run the Ethereum JSON-RPC sidecar (Revive):
+
+- **EVM JSON-RPC (HTTP)**: `http://localhost:8545` (from `eth-rpc`)
 
 Connect via:
 - [Polkadot.js Apps](https://polkadot.js.org/apps) (set custom endpoint)
@@ -226,12 +244,12 @@ Connect via:
 | Phase | Status | Progress |
 |-------|--------|----------|
 | Phase 1: Core Architecture | ✅ Complete | 100% |
-| Phase 2: Governance | ⚙️ Configured | 90% |
-| Phase 3: Smart Contracts | ⚙️ Configured | 85% |
-| Phase 4: Infrastructure | ✅ In Progress | 50% |
-| Phase 5: QA & Docs | 📋 Planned | 0% |
+| Phase 2: Validator Network & Governance | ✅ Local-ready | 100% (local) |
+| Phase 3: Smart Contracts | ✅ Local-ready | 100% (local demos) |
+| Phase 4: Infrastructure & Monitoring | ✅ Local-ready | 100% (local stack) |
+| Phase 5: QA & Docs | ✅ Local-ready | 100% (local verification + checklist) |
 
-**Overall Progress**: ~70% Complete
+**Note**: “Local-ready” means runnable proofs exist in this repo; public infra deployment still requires servers/ops.
 
 ## 📝 License
 
