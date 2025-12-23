@@ -1,0 +1,12 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: "myl1-node"
+    static_configs:
+      - targets:
+          # Run the node with:
+          #   ./target/release/myl1-node --dev --prometheus-external --prometheus-port 9615
+          - "127.0.0.1:9615"
+
+
