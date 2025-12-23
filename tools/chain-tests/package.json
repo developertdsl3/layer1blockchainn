@@ -1,0 +1,20 @@
+{
+  "name": "myl1-chain-tests",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Automation scripts to validate MyL1 phases (governance/staking/fees).",
+  "dependencies": {
+    "@polkadot/api": "^12.0.0",
+    "@polkadot/keyring": "^12.0.0",
+    "@polkadot/util": "^12.0.0",
+    "@polkadot/util-crypto": "^12.0.0"
+  },
+  "scripts": {
+    "phase1": "node src/phase1_smoke.js",
+    "phase2:governance": "node src/phase2_governance_smoke.js",
+    "phase2:staking": "node src/phase2_staking_smoke.js",
+    "report": "node src/report.js"
+  }
+}
+
+

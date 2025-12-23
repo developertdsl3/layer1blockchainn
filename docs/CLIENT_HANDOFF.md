@@ -64,6 +64,7 @@ cargo build --release --package myl1-node-cli
 - `./scripts/test-phase1.sh` passes
 - `./target/release/myl1-node --dev` produces blocks
 - No local chain DBs are committed (e.g. `alice-fresh/`, `bob-fresh/`, `target/`)
+- Optional Phase 2 smoke: `./scripts/test-phase2.sh` (governance + staking snapshot)
 
 ## Optional: pre-commit hooks
 
