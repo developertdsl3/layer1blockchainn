@@ -59,24 +59,26 @@ cargo build --release --package myl1-node-cli
 - ✅ Multi-validator support
 - ✅ Governance pallets active
 - ✅ Staking rewards configured (2.5%-10% inflation)
-- ⏳ Testing in progress
+- ✅ Local automation: `./scripts/test-phase2.sh` (governance extrinsics + staking snapshot)
+- ✅ Local 5-validator network: `./scripts/run-zombienet-5.sh`
+- ⏳ Public testnet deployment (3–5 validators) still requires servers + ops
 
 ### ⚙️ Phase 3: Smart Contract Layer (CONFIGURED)
 - ✅ Ink! contracts enabled
-- ✅ EVM (Revive) enabled
+- ✅ EVM (Revive) enabled (via `eth-rpc` sidecar)
 - ✅ Multi-token support (Assets pallet)
-- ⏳ Testing in progress
+- ✅ Local automation: `./scripts/test-phase3.sh` (EVM deploy + Ink! build)
 
-### ✅ Phase 4: Infrastructure & Monitoring (IN PROGRESS)
+### ✅ Phase 4: Infrastructure & Monitoring (LOCAL READY)
 - ✅ **Blockchain Explorer** - React-based block explorer
 - ✅ **Wallet Integration** - Web wallet with Polkadot.js
-- ⏳ RPC nodes deployment
-- ⏳ Monitoring (Prometheus + Grafana)
+- ✅ Monitoring: `./scripts/run-monitoring.sh`
+- ✅ Indexing (Subsquid-style): `./scripts/run-subsquid.sh` (GraphQL at `http://127.0.0.1:4350/graphql`)
+- ✅ Full stack (monitoring + explorer + wallet + indexer): `./scripts/run-full-stack.sh`
 
-### 📋 Phase 5: QA & Documentation (PLANNED)
-- ⏳ Full integration testing
-- ⏳ Complete documentation
-- ⏳ Audit preparation
+### 📋 Phase 5: QA & Documentation (LOCAL VERIFICATION READY)
+- ✅ QA checklist: `docs/QA_CHECKLIST.md`
+- ✅ End-to-end local verification + proof artifacts: `./scripts/test-all-phases.sh` (writes `reports/`)
 
 ## 📊 Network Configuration
 
@@ -175,6 +177,12 @@ See [Explorer & Wallet Setup Guide](docs/EXPLORER_WALLET_SETUP.md) for details.
 
 ```bash
 ./scripts/test-phase1-complete.sh
+```
+
+### All-phases local verification (proof artifacts)
+
+```bash
+./scripts/test-all-phases.sh
 ```
 
 ### Manual Testing
