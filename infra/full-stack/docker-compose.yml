@@ -84,6 +84,42 @@ services:
       - PORT=3001
     command: bash -lc "npm install && npm start"
 
+  # REST API
+  rest-api:
+    image: node:20
+    working_dir: /app
+    volumes:
+      - ../../infra/rest-api:/app
+    ports:
+      - "3002:3002"
+    environment:
+      - PORT=3002
+      - WS_ENDPOINT=${WS_ENDPOINT:-ws://host.docker.internal:9944}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    command: bash -lc "npm install && npm start"
+
+  # Faucet
+  faucet:
+    image: node:20
+    working_dir: /app
+    volumes:
+      - ../../infra/faucet:/app
+    ports:
+      - "3003:3003"
+    environment:
+      - PORT=3003
+      - WS_ENDPOINT=${WS_ENDPOINT:-ws://host.docker.internal:9944}
+      - FAUCET_MNEMONIC=${FAUCET_MNEMONIC:-}
+      - FAUCET_AMOUNT=${FAUCET_AMOUNT:-1000000000000000000}
+      - FAUCET_COOLDOWN=${FAUCET_COOLDOWN:-3600000}
+      - FAUCET_MAX_BALANCE=${FAUCET_MAX_BALANCE:-10000000000000000000000}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    command: bash -lc "npm install && npm start"
+    depends_on:
+      - rest-api
+
 volumes:
   prometheus-data:
   grafana-data:

@@ -18,6 +18,18 @@ cargo build --release --package myl1-node-cli
 
 ### Run Local Testnet (2 Validators)
 
+**Easy way (using scripts):**
+
+```bash
+# Terminal 1 - Start Alice
+./scripts/run-2-nodes.sh
+
+# Terminal 2 - After Alice starts, get her peer ID from logs, then:
+./scripts/run-bob-node.sh <ALICE_PEER_ID>
+```
+
+**Manual way:**
+
 ```bash
 # Terminal 1 - Alice
 ./target/release/myl1-node \
@@ -27,13 +39,12 @@ cargo build --release --package myl1-node-cli
     --base-path ./alice-fresh \
     --port 30333 \
     --rpc-port 9933 \
-    --ws-port 9944 \
     --rpc-cors all \
-    --ws-external \
     --rpc-external \
     --name "MyL1-Alice"
 
 # Terminal 2 - Bob (after getting Alice's peer ID from logs)
+# Look for: "Local node identity is: 12D3KooW..."
 ./target/release/myl1-node \
     --chain local \
     --bob \
@@ -41,13 +52,13 @@ cargo build --release --package myl1-node-cli
     --base-path ./bob-fresh \
     --port 30334 \
     --rpc-port 9934 \
-    --ws-port 9945 \
     --rpc-cors all \
-    --ws-external \
     --rpc-external \
     --bootnodes /ip4/127.0.0.1/tcp/30333/p2p/<ALICE_PEER_ID> \
     --name "MyL1-Bob"
 ```
+
+**Note:** RPC port serves both HTTP and WebSocket. No separate `--ws-port` flag needed.
 
 ### Verify everything locally (Phases 1–4)
 
@@ -263,10 +274,48 @@ If you run the Ethereum JSON-RPC sidecar (Revive):
 
 - **EVM JSON-RPC (HTTP)**: `http://localhost:8545` (from `eth-rpc`)
 
-Connect via:
+### REST API
+
+RESTful API wrapper for blockchain data:
+
+```bash
+./scripts/start-rest-api.sh
+```
+
+Available at: **http://localhost:3002**
+
+**Features:**
+- Account balance queries
+- Block information
+- Staking data
+- Transaction fee estimation
+- Network statistics
+
+See [REST API & Faucet Documentation](docs/REST_API_FAUCET.md) for full API reference.
+
+### Faucet
+
+Testnet token distribution service with web UI:
+
+```bash
+./scripts/start-faucet.sh
+```
+
+Available at: **http://localhost:3003**
+
+**Features:**
+- Web UI for easy token requests
+- Rate limiting (1 request/hour)
+- Cooldown enforcement
+- Automatic transaction signing
+
+See [REST API & Faucet Documentation](docs/REST_API_FAUCET.md) for setup instructions.
+
+### Connect via:
 - [Polkadot.js Apps](https://polkadot.js.org/apps) (set custom endpoint)
 - `subxt` (Rust client)
 - `@polkadot/api` (JavaScript client)
+- REST API (HTTP endpoints)
 
 ## 🚧 Development Status
 
@@ -289,13 +338,13 @@ Connect via:
 - ✅ **Explorer & Web Wallet**: 100% Complete
 - ✅ **Mobile Wallet**: ✅ Complete (React Native - iOS & Android)
 - ✅ **RPC/WebSocket APIs**: 100% Complete
+- ✅ **REST API**: ✅ Complete (RESTful wrapper for JSON-RPC)
+- ✅ **Faucet**: ✅ Complete (Testnet token distribution with web UI)
 - ✅ **Documentation**: 100% Complete
 - ⚠️ **Public Testnet**: Not deployed (requires cloud infrastructure)
-- ❌ **REST API**: Not implemented (JSON-RPC only)
-- ❌ **Faucet**: Not implemented
 - ⚠️ **Performance Benchmarks**: Not verified (architecture supports 3k-10k TPS target)
 
-**Overall Completion: ~90%** (Core blockchain is production-ready; missing items are infrastructure deployment and tooling enhancements)
+**Overall Completion: ~95%** (Core blockchain is production-ready; missing items are infrastructure deployment and performance verification)
 
 ## 📝 License
 
