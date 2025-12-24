@@ -1,0 +1,11 @@
+
+added 128 packages, and audited 129 packages in 29s
+
+6 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+
+> myl1-chain-tests@1.0.0 phase1
+> node src/phase1_smoke.js
+
