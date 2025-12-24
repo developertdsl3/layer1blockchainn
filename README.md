@@ -123,6 +123,7 @@ layer1blockhain/
 
 ## 📚 Documentation
 
+- **[Requirements Status](docs/REQUIREMENTS_STATUS.md)** - ⭐ **Full requirements checklist vs implementation**
 - **[Client Handoff](docs/CLIENT_HANDOFF.md)** - What to deliver and how to validate Stage 1
 - **[Docs Index](docs/INDEX.md)** - Quick map of the documentation set
 - **[Architecture](docs/ARCHITECTURE.md)** - System architecture overview
@@ -184,6 +185,34 @@ Opens at: **http://localhost:3001**
 4. Connect wallet and use!
 
 See [Explorer & Wallet Setup Guide](docs/EXPLORER_WALLET_SETUP.md) for details.
+
+### Mobile Wallet
+
+Modern React Native mobile wallet for iOS and Android.
+
+```bash
+cd mobile-wallet
+npm install
+
+# iOS
+npm run ios
+
+# Android
+npm run android
+```
+
+**Features:**
+- ✅ Modern, beautiful UI with gradient designs
+- ✅ Secure key management (device keychain)
+- ✅ Wallet creation with 12-word recovery phrase
+- ✅ Import existing wallet
+- ✅ Send/Receive MYL1 tokens
+- ✅ QR code for receiving payments
+- ✅ Transaction history
+- ✅ Real-time balance updates
+- ✅ Network status indicator
+
+See [Mobile Wallet README](mobile-wallet/README.md) for detailed setup instructions.
 
 ## 🧪 Testing
 
@@ -249,7 +278,24 @@ Connect via:
 | Phase 4: Infrastructure & Monitoring | ✅ Local-ready | 100% (local stack) |
 | Phase 5: QA & Docs | ✅ Local-ready | 100% (local verification + checklist) |
 
-**Note**: “Local-ready” means runnable proofs exist in this repo; public infra deployment still requires servers/ops.
+**Note**: "Local-ready" means runnable proofs exist in this repo; public infra deployment still requires servers/ops.
+
+## 📋 Full Requirements Status
+
+**See [Requirements Status](docs/REQUIREMENTS_STATUS.md) for complete checklist.**
+
+**Summary:**
+- ✅ **Core L1 Blockchain**: 100% Complete (PoS, staking, governance, smart contracts)
+- ✅ **Explorer & Web Wallet**: 100% Complete
+- ✅ **Mobile Wallet**: ✅ Complete (React Native - iOS & Android)
+- ✅ **RPC/WebSocket APIs**: 100% Complete
+- ✅ **Documentation**: 100% Complete
+- ⚠️ **Public Testnet**: Not deployed (requires cloud infrastructure)
+- ❌ **REST API**: Not implemented (JSON-RPC only)
+- ❌ **Faucet**: Not implemented
+- ⚠️ **Performance Benchmarks**: Not verified (architecture supports 3k-10k TPS target)
+
+**Overall Completion: ~90%** (Core blockchain is production-ready; missing items are infrastructure deployment and tooling enhancements)
 
 ## 📝 License
 

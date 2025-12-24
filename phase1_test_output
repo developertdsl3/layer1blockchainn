@@ -1,0 +1,62 @@
+╔══════════════════════════════════════════════════════╗
+║         Phase 1 Testing - MyL1 Blockchain           ║
+╚══════════════════════════════════════════════════════╝
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Test 1: Building Node
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[1;33m⚠️  Node not built. Building now...[0m
+This will take 10-30 minutes...
+[0;32m✅ Build successful![0m
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Test 2: Chain Spec Generation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2.1 Testing dev chain spec...
+[0;32m   ✅ Dev chain spec generated[0m
+[0;32m   ✅ MYL1 token found in spec[0m
+2.2 Testing local chain spec...
+[0;32m   ✅ Local chain spec generated[0m
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Test 3: Node Information
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+3.1 Node version:
+myl1-node 3.0.0-801e617b488
+
+
+3.2 Available chains:
+MyL1 Blockchain Node - Production L1 blockchain with staking, governance, and smart contracts
+
+Usage: myl1-node [OPTIONS]
+       myl1-node <COMMAND>
+
+Commands:
+--
+  build-spec         Build a chain specification. DEPRECATED: `build-spec` command will be removed after
+                     1/04/2026. Use `export-chain-spec` command instead
+  export-chain-spec  Export the chain specification
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Test 4: Runtime Features Verification
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Checking runtime pallets in code...
+[0;32m   ✅ Babe pallet found[0m
+[0;32m   ✅ Grandpa pallet found[0m
+[0;32m   ✅ Staking pallet found[0m
+[0;32m   ✅ Democracy pallet found[0m
+[1;33m   ⚠️  Council pallet check needed[0m
+[0;32m   ✅ Contracts pallet found[0m
+[1;33m   ⚠️  TransactionPayment pallet check needed[0m
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Test Summary
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ Build: Complete
+✅ Chain Specs: Generated
+✅ Node: Ready
+
+Next: Run dev node to test block production
+Command: ./target/release/myl1-node --dev
+
