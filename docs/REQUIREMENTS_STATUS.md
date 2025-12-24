@@ -147,10 +147,17 @@ This document compares the full L1 blockchain requirements against the current i
 ## ❌ MISSING Requirements
 
 ### 1. REST API
-- **Status**: ❌ **NOT IMPLEMENTED**
-- **Current**: Only JSON-RPC (HTTP + WebSocket)
-- **Required**: REST API endpoints
-- **Note**: Can be added via REST API wrapper (e.g., using Substrate API Sidecar)
+- **Status**: ✅ **COMPLETE**
+- **Implementation**: Express.js REST API wrapper for JSON-RPC
+- **Features**: 
+  - Account balance queries ✅
+  - Block information ✅
+  - Staking data ✅
+  - Transaction fee estimation ✅
+  - Network statistics ✅
+  - Rate limiting ✅
+- **Evidence**: `infra/rest-api/` directory - Full REST API implementation
+- **Documentation**: `docs/REST_API_FAUCET.md`
 
 ### 2. Mobile Wallet
 - **Status**: ✅ **COMPLETE**
@@ -175,9 +182,16 @@ This document compares the full L1 blockchain requirements against the current i
 - **Note**: Requires cloud deployment and operations
 
 ### 4. Faucet Service
-- **Status**: ❌ **NOT IMPLEMENTED**
-- **Required**: Web service to distribute testnet tokens
-- **Note**: Can be built as a simple web service using Substrate API
+- **Status**: ✅ **COMPLETE**
+- **Implementation**: Express.js web service with UI for testnet token distribution
+- **Features**: 
+  - Web UI for easy token requests ✅
+  - Rate limiting (1 request/hour) ✅
+  - Cooldown enforcement ✅
+  - Balance checking ✅
+  - Transaction signing and submission ✅
+- **Evidence**: `infra/faucet/` directory - Full faucet implementation
+- **Documentation**: `docs/REST_API_FAUCET.md`
 
 ### 5. Custom SDK Package
 - **Status**: ❌ **NOT IMPLEMENTED**
@@ -212,26 +226,28 @@ This document compares the full L1 blockchain requirements against the current i
 | **RPC/WebSocket** | ✅ Complete | 100% |
 | **Documentation** | ✅ Complete | 100% |
 | **Local Infrastructure** | ✅ Complete | 100% |
-| **REST API** | ❌ Missing | 0% |
+| **REST API** | ✅ Complete | 100% |
 | **Public Testnet** | ❌ Not Deployed | 0% |
-| **Faucet** | ❌ Missing | 0% |
+| **Faucet** | ✅ Complete | 100% |
 | **Custom SDK** | ⚠️ Partial | 50% |
 | **Performance Benchmarks** | ⚠️ Not Verified | 0% |
 | **Kubernetes** | ❌ Missing | 0% |
 
-## 🎯 Overall Completion: ~90%
+## 🎯 Overall Completion: ~95%
 
 **Core L1 Blockchain**: ✅ 100% Complete
-**Infrastructure & Tools**: ⚠️ 70% Complete (local ready, public deployment missing)
-**Developer Experience**: ⚠️ 80% Complete (docs excellent, mobile wallet complete, SDK wrapper missing)
+**Infrastructure & Tools**: ⚠️ 85% Complete (local ready, REST API & Faucet complete, public deployment missing)
+**Developer Experience**: ⚠️ 90% Complete (docs excellent, mobile wallet complete, REST API & Faucet complete, SDK wrapper missing)
 
 ## 🚀 Next Steps to Reach 100%
 
-1. **Add REST API** (1-2 days)
-   - Use Substrate API Sidecar or build custom REST wrapper
+1. **REST API** ✅ **COMPLETE**
+   - Express.js REST API wrapper implemented
+   - Full endpoint coverage for blockchain data
 
-2. **Build Faucet** (1-2 days)
-   - Simple web service using Substrate API
+2. **Faucet** ✅ **COMPLETE**
+   - Web service with UI implemented
+   - Rate limiting and cooldown enforcement
 
 3. **Performance Benchmarks** (3-5 days)
    - Run TPS benchmarks
