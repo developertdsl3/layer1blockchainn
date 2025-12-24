@@ -1,0 +1,20 @@
+{
+  "name": "myl1-subsquid",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Minimal Subsquid-style indexer + GraphQL for MyL1 (local/dev).",
+  "scripts": {
+    "processor": "node src/processor.js",
+    "server": "node src/server.js"
+  },
+  "dependencies": {
+    "@polkadot/api": "^12.0.0",
+    "apollo-server-express": "^3.13.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "graphql": "^16.9.0",
+    "pg": "^8.13.1"
+  }
+}
+
+

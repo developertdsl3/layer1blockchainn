@@ -1,0 +1,8 @@
+[toolchain]
+# Pinned for reproducible builds. Update intentionally (and in a single commit) when bumping SDK/tooling.
+channel = "nightly-2025-12-14"
+profile = "minimal"
+components = ["rustfmt", "clippy"]
+targets = ["wasm32-unknown-unknown"]
+
+

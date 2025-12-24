@@ -1,0 +1,25 @@
+.git
+.github
+.vscode
+.idea
+
+# Rust build output
+target
+**/target
+
+# Node / frontend
+node_modules
+**/node_modules
+explorer/build
+wallet/build
+
+# Local chain data
+alice-fresh
+bob-fresh
+charlie-fresh
+archive
+chains
+
+# Logs
+*.log
+

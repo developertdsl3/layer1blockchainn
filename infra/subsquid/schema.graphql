@@ -1,0 +1,15 @@
+type Transfer {
+  id: ID!
+  blockNumber: Int!
+  extrinsicHash: String
+  from: String!
+  to: String!
+  amount: String!
+}
+
+type Query {
+  transfers(limit: Int = 50, offset: Int = 0): [Transfer!]!
+  transferCount: Int!
+}
+
+

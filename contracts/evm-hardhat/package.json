@@ -1,0 +1,12 @@
+{
+  "name": "myl1-evm-hardhat",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Hardhat project to deploy Solidity contracts via pallet-revive eth-rpc sidecar.",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "hardhat": "^2.22.15"
+  }
+}
+
+
