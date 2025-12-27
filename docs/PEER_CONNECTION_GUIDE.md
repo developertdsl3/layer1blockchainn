@@ -158,3 +158,4 @@ Then in Terminal 2, get Alice's peer ID and run Bob.
 
 Your current setup is working correctly! The "0 peers" message is expected for dev mode.
 
+

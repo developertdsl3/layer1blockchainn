@@ -1,0 +1,85 @@
+#!/bin/bash
+
+# Manual EC2 Setup Instructions
+# Run these commands on your EC2 instance
+
+echo "🔧 MANUAL EC2 BLOCKCHAIN SETUP"
+echo "=============================="
+echo ""
+echo "If you can SSH into your EC2 instance, run these commands:"
+echo ""
+
+echo "1. Update system and install Docker:"
+echo "   sudo yum update -y"
+echo "   sudo yum install -y docker git"
+echo "   sudo service docker start"
+echo "   sudo usermod -a -G docker \$USER"
+echo ""
+
+echo "2. Logout and login again, then:"
+echo "   docker --version"
+echo ""
+
+echo "3. Pull and run MyL1 blockchain:"
+echo "   docker pull gyufugugu/myl1-node:latest"
+echo ""
+echo "   docker run -d \\"
+echo "     --name myl1-node \\"
+echo "     -p 9944:9944 \\"
+echo "     -p 9933:9933 \\"
+echo "     -p 30333:30333 \\"
+echo "     --restart unless-stopped \\"
+echo "     gyufugugu/myl1-node:latest \\"
+echo "     --dev --ws-external --rpc-external --prometheus-external --prometheus-port 9615"
+echo ""
+
+echo "4. Check if it's running:"
+echo "   docker ps"
+echo "   docker logs myl1-node"
+echo ""
+
+echo "5. Test the endpoints:"
+echo "   curl -X POST -H 'Content-Type: application/json' \\"
+echo "     --data '{\"jsonrpc\":\"2.0\",\"method\":\"system_health\",\"params\":[],\"id\":1}' \\"
+echo "     http://localhost:9933"
+echo ""
+
+echo "6. Optional: Start monitoring:"
+echo "   docker run -d --name prometheus -p 9090:9090 --restart unless-stopped prom/prometheus"
+echo "   docker run -d --name grafana -p 3000:3000 --restart unless-stopped grafana/grafana"
+echo ""
+
+echo "📋 HOW TO GET SSH ACCESS:"
+echo "=========================="
+echo ""
+echo "Since we didn't create SSH keys, you'll need to:"
+echo ""
+echo "1. Ask your AWS admin to:"
+echo "   - Create a key pair in EC2 → Key Pairs"
+echo "   - Or attach an existing key pair to your instance"
+echo ""
+echo "2. Then you can SSH:"
+echo "   ssh -i your-key.pem ec2-user@3.228.10.149"
+echo ""
+
+echo "🔄 ALTERNATIVE: TERMINATE AND TRY AGAIN"
+echo "========================================"
+echo ""
+echo "If manual setup doesn't work:"
+echo ""
+echo "1. Terminate this instance:"
+echo "   aws ec2 terminate-instances --instance-ids i-010428311d244cfbf --region us-east-1"
+echo ""
+echo "2. Try a different approach:"
+echo "   - Use a larger instance type (t3.large)"
+echo "   - Use a different AMI"
+echo "   - Ask AWS admin for full EC2 permissions"
+echo ""
+
+echo "🎯 FINAL ENDPOINTS (if successful):"
+echo "==================================="
+echo "WebSocket: ws://3.228.10.149:9944"
+echo "HTTP RPC:  http://3.228.10.149:9933"
+echo "P2P:       3.228.10.149:30333"
+
+
