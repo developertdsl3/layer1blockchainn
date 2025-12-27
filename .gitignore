@@ -42,3 +42,6 @@ explorer/node_modules/
 wallet/node_modules/
 explorer/build/
 wallet/build/
+/artifacts/
+/target/
+*.wasm
