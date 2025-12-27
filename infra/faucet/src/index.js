@@ -1,7 +1,6 @@
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
-const rateLimit = require('express-rate-limit');
 const cron = require('node-cron');
 require('dotenv').config();
 
@@ -22,6 +21,9 @@ const FAUCET_MAX_BALANCE = process.env.FAUCET_MAX_BALANCE || '100000000000000000
 // Store request history (in production, use Redis or database)
 const requestHistory = new Map();
 
+// Clear request history for testing (remove in production)
+requestHistory.clear();
+
 // Middleware
 app.use(helmet({
   contentSecurityPolicy: {
@@ -36,14 +38,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
-// Rate limiting - stricter for faucet
-const faucetLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 1, // 1 request per hour per IP
-  message: 'You have already requested tokens. Please wait before requesting again.',
-  standardHeaders: true,
-  legacyHeaders: false,
-});
+// Manual rate limiting is handled in the request handler
 
 // Initialize API and keyring
 let api = null;
@@ -133,7 +128,7 @@ app.get('/api/status', async (req, res) => {
 });
 
 // Request tokens
-app.post('/api/request', faucetLimiter, async (req, res) => {
+app.post('/api/request', async (req, res) => {
   try {
     if (!isConnected || !api) {
       return res.status(503).json({ error: 'Node not connected' });
@@ -150,6 +145,20 @@ app.post('/api/request', faucetLimiter, async (req, res) => {
       return res.status(400).json({ error: 'Address is required' });
     }
 
+    // Manual rate limiting check
+    const lastRequest = requestHistory.get(address) || requestHistory.get(clientIp);
+    if (lastRequest) {
+      const timeSince = Date.now() - lastRequest.timestamp;
+      if (timeSince < FAUCET_COOLDOWN) {
+        const remaining = Math.ceil((FAUCET_COOLDOWN - timeSince) / 1000 / 60);
+        return res.status(429).json({
+          error: 'You have already requested tokens. Please wait before requesting again.',
+          cooldownMinutes: remaining,
+          nextRequest: new Date(lastRequest.timestamp + FAUCET_COOLDOWN).toISOString()
+        });
+      }
+    }
+
     // Validate address format
     try {
       keyring.addFromAddress(address);
@@ -157,19 +166,6 @@ app.post('/api/request', faucetLimiter, async (req, res) => {
       return res.status(400).json({ error: 'Invalid address format' });
     }
 
-    // Check cooldown
-    const lastRequest = requestHistory.get(address) || requestHistory.get(clientIp);
-    if (lastRequest) {
-      const timeSince = Date.now() - lastRequest.timestamp;
-      if (timeSince < FAUCET_COOLDOWN) {
-        const remaining = Math.ceil((FAUCET_COOLDOWN - timeSince) / 1000 / 60);
-        return res.status(429).json({
-          error: 'Cooldown active',
-          remainingMinutes: remaining,
-          nextRequest: new Date(lastRequest.timestamp + FAUCET_COOLDOWN).toISOString()
-        });
-      }
-    }
 
     // Check faucet balance
     const balance = await api.query.system.account(faucetAccount.address);
@@ -196,7 +192,7 @@ app.post('/api/request', faucetLimiter, async (req, res) => {
     }
 
     // Create and sign transaction
-    const transfer = api.tx.balances.transfer(address, FAUCET_AMOUNT);
+    const transfer = api.tx.balances.transferAllowDeath(address, FAUCET_AMOUNT);
     const nonce = await api.rpc.system.accountNextIndex(faucetAccount.address);
     
     const signedTx = await transfer.signAsync(faucetAccount, { nonce });

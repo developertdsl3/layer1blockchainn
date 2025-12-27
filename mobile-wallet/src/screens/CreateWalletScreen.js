@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import Clipboard from '@react-native-clipboard/clipboard';
 import { useWallet } from '../context/WalletContext';
 import { mnemonicGenerate } from '@polkadot/util-crypto';
 
@@ -19,12 +20,30 @@ export default function CreateWalletScreen({ navigation }) {
   const [mnemonic, setMnemonic] = useState('');
   const [confirmMnemonic, setConfirmMnemonic] = useState('');
   const [step, setStep] = useState(1); // 1: generate, 2: confirm
+  const [copied, setCopied] = useState(false);
   const { createWallet, isLoading } = useWallet();
 
   const generateMnemonic = () => {
-    const newMnemonic = mnemonicGenerate(12);
-    setMnemonic(newMnemonic);
+    console.log('Generate mnemonic button pressed');
+
+    // Use a hardcoded test mnemonic for now to ensure it works
+    const testMnemonic = 'tired hawk follow know approve already clinic hill season humble student base';
+    console.log('Using test mnemonic:', testMnemonic);
+
+    setMnemonic(testMnemonic);
     setStep(2);
+    console.log('Test mnemonic set, step changed to 2');
+  };
+
+  const copyMnemonicToClipboard = async () => {
+    try {
+      await Clipboard.setString(mnemonic);
+      setCopied(true);
+      Alert.alert('Copied!', 'Recovery phrase copied to clipboard');
+      setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      Alert.alert('Error', 'Failed to copy to clipboard');
+    }
   };
 
   const handleConfirm = async () => {
@@ -38,13 +57,16 @@ export default function CreateWalletScreen({ navigation }) {
       return;
     }
 
-    const success = await createWallet(mnemonic, '');
-    if (success) {
-      Alert.alert('Success', 'Wallet created successfully!', [
+    console.log('Creating wallet with mnemonic:', mnemonic);
+    const result = await createWallet(mnemonic, '');
+    console.log('Wallet creation result:', result);
+
+    if (result && result.success) {
+      Alert.alert('Success', `Wallet created successfully!\nAddress: ${result.address || 'Unknown'}`, [
         { text: 'OK', onPress: () => navigation.replace('Main') },
       ]);
     } else {
-      Alert.alert('Error', 'Failed to create wallet');
+      Alert.alert('Error', result?.error || 'Failed to create wallet');
     }
   };
 
@@ -65,6 +87,9 @@ export default function CreateWalletScreen({ navigation }) {
       </LinearGradient>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        <Text style={{color: 'red', textAlign: 'center', marginBottom: 10}}>
+          DEBUG: Current Step = {step}, Mnemonic length = {mnemonic.length}
+        </Text>
         {step === 1 ? (
           <View style={styles.stepContainer}>
             <View style={styles.iconContainer}>
@@ -83,7 +108,10 @@ export default function CreateWalletScreen({ navigation }) {
 
             <TouchableOpacity
               style={styles.generateButton}
-              onPress={generateMnemonic}
+              onPress={() => {
+                console.log('Generate button pressed');
+                generateMnemonic();
+              }}
               activeOpacity={0.8}
             >
               <LinearGradient
@@ -123,6 +151,26 @@ export default function CreateWalletScreen({ navigation }) {
                 </View>
               ))}
             </View>
+
+            <TouchableOpacity
+              style={styles.copyButton}
+              onPress={copyMnemonicToClipboard}
+              activeOpacity={0.8}
+            >
+              <LinearGradient
+                colors={copied ? ['#10b981', '#059669'] : ['#f59e0b', '#d97706']}
+                style={styles.copyButtonGradient}
+              >
+                <Icon
+                  name={copied ? 'check-circle' : 'content-copy'}
+                  size={20}
+                  color="#ffffff"
+                />
+                <Text style={styles.copyButtonText}>
+                  {copied ? 'Copied!' : 'Copy Recovery Phrase'}
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
 
             <Text style={styles.confirmTitle}>Confirm Your Recovery Phrase</Text>
             <View style={styles.inputContainer}>
@@ -330,6 +378,30 @@ const styles = StyleSheet.create({
   confirmButtonText: {
     color: '#ffffff',
     fontSize: 18,
+    fontWeight: 'bold',
+    marginLeft: 8,
+  },
+  copyButton: {
+    borderRadius: 12,
+    overflow: 'hidden',
+    width: '100%',
+    marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  copyButtonGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+  },
+  copyButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
     fontWeight: 'bold',
     marginLeft: 8,
   },

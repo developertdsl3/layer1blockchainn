@@ -11,7 +11,7 @@ function App() {
   const [balance, setBalance] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [wsEndpoint, setWsEndpoint] = useState('ws://localhost:9944');
+  const [wsEndpoint, setWsEndpoint] = useState('ws://13.211.114.206:9944');
   
   // Transfer state
   const [transferTo, setTransferTo] = useState('');
@@ -152,7 +152,7 @@ function App() {
             type="text" 
             value={wsEndpoint}
             onChange={(e) => setWsEndpoint(e.target.value)}
-            placeholder="ws://localhost:9944"
+            placeholder="ws://13.211.114.206:9944"
           />
         </div>
 

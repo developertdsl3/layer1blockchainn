@@ -9,7 +9,7 @@ const { Keyring } = require('@polkadot/keyring');
 
 const app = express();
 const PORT = process.env.PORT || 3002;
-const WS_ENDPOINT = process.env.WS_ENDPOINT || 'ws://127.0.0.1:9944';
+const WS_ENDPOINT = process.env.WS_ENDPOINT || 'ws://127.0.0.1:9933';
 
 // Middleware
 app.use(helmet());
@@ -88,6 +88,147 @@ app.get('/health', (req, res) => {
 
 // API Routes
 
+// Get account balance
+app.get('/api/account/:address', async (req, res) => {
+  try {
+    if (!isConnected || !api) {
+      return res.status(503).json({ error: 'Node not connected' });
+    }
+
+    const address = req.params.address;
+    console.log(`Getting balance for: ${address}`);
+
+    const account = await api.query.system.account(address);
+    const balance = account.data;
+
+    res.json({
+      address,
+      free: balance.free?.toString() || '0',
+      reserved: balance.reserved?.toString() || '0',
+      miscFrozen: balance.miscFrozen?.toString() || '0',
+      feeFrozen: balance.feeFrozen?.toString() || '0',
+      total: balance.free && balance.reserved ? balance.free.add(balance.reserved).toString() : '0'
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get transaction details by hash
+app.get('/api/transaction/:hash', async (req, res) => {
+  try {
+    if (!isConnected || !api) {
+      return res.status(503).json({ error: 'Node not connected' });
+    }
+
+    const txHash = req.params.hash;
+    console.log(`Looking up transaction: ${txHash}`);
+
+    // Try to get the transaction status
+    try {
+      const status = await api.rpc.chain.getTransactionStatus(txHash);
+      console.log('Transaction status:', status.toJSON());
+
+      if (status.isInBlock) {
+        const blockHash = status.asInBlock;
+        console.log('Found in block:', blockHash.toString());
+
+        // Get the block header
+        const header = await api.rpc.chain.getHeader(blockHash);
+        const blockNumber = header.number.toNumber();
+
+        // Get events for this block
+        const events = await api.query.system.events.at(blockHash);
+
+        console.log(`Events in block ${blockNumber}:`);
+        events.forEach((record, index) => {
+          console.log(`  [${index}] ${record.event.section}.${record.event.method}`);
+        });
+
+        return res.json({
+          hash: txHash,
+          status: 'in_block',
+          blockHash: blockHash.toString(),
+          blockNumber: blockNumber,
+          events: events.map((record, index) => ({
+            index,
+            section: record.event.section,
+            method: record.event.method,
+            data: record.event.data.map(d => d?.toString())
+          }))
+        });
+      }
+    } catch (statusError) {
+      console.log('Status lookup failed:', statusError.message);
+    }
+
+    res.status(404).json({ error: 'Transaction not found' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get recent transactions across all blocks
+app.get('/api/chain/transactions/recent', async (req, res) => {
+  try {
+    if (!isConnected || !api) {
+      return res.status(503).json({ error: 'Node not connected' });
+    }
+
+    const header = await api.rpc.chain.getHeader();
+    const currentBlock = header.number.toNumber();
+    const startBlock = Math.max(1, currentBlock - 100); // Last 100 blocks
+
+    console.log(`Getting recent transactions from blocks ${startBlock} to ${currentBlock}`);
+
+    const allTransactions = [];
+
+    // Get transactions from recent blocks
+    for (let blockNum = currentBlock; blockNum >= startBlock && allTransactions.length < 200; blockNum--) {
+      try {
+        const blockResponse = await fetch(`http://localhost:3002/api/chain/block/${blockNum}`);
+        if (blockResponse.ok) {
+          const blockData = await blockResponse.json();
+          if (blockData.userTransactions && blockData.userTransactions.length > 0) {
+            // Add block number and timestamp to each transaction
+            const blockTxs = blockData.userTransactions.map(tx => ({
+              ...tx,
+              block: blockNum,
+              time: new Date().toISOString() // Approximate timestamp
+            }));
+            allTransactions.push(...blockTxs);
+          }
+        }
+      } catch (err) {
+        // Skip blocks that fail to load
+        continue;
+      }
+    }
+
+    // Return most recent transactions
+    res.json(allTransactions.slice(0, 100));
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get current block height
+app.get('/api/chain/current', async (req, res) => {
+  try {
+    if (!isConnected || !api) {
+      return res.status(503).json({ error: 'Node not connected' });
+    }
+
+    const header = await api.rpc.chain.getHeader();
+    res.json({
+      number: header.number.toNumber(),
+      hash: header.hash.toString()
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Get chain info
 app.get('/api/chain/info', async (req, res) => {
   try {
@@ -124,7 +265,7 @@ app.get('/api/chain/info', async (req, res) => {
   }
 });
 
-// Get latest block
+// Get latest block (avoids extrinsic version 5 decoding errors)
 app.get('/api/chain/block', async (req, res) => {
   try {
     if (!isConnected || !api) {
@@ -132,25 +273,49 @@ app.get('/api/chain/block', async (req, res) => {
     }
 
     const hash = await api.rpc.chain.getBlockHash();
-    const block = await api.rpc.chain.getBlock(hash);
+    
+    // Use getHeader() instead of getBlock() to avoid extrinsic version 5 decoding errors
+    const header = await api.rpc.chain.getHeader(hash);
+    
+    // Count extrinsics using events (avoids decoding)
+    let extrinsicsCount = 0;
+    let timestamp = null;
+    
+    try {
+      const events = await api.query.system.events.at(hash);
+      const extrinsicIndices = new Set();
+      
+      events.forEach((record) => {
+        const { event, phase } = record;
+        if (phase.isApplyExtrinsic) {
+          extrinsicIndices.add(phase.asApplyExtrinsic.toNumber());
+        }
+        // Try to get timestamp from events
+        if (event.section === 'timestamp' && event.method === 'Set') {
+          timestamp = event.data[0]?.toString() || null;
+        }
+      });
+      extrinsicsCount = extrinsicIndices.size || 0;
+    } catch (eventsError) {
+      // If events query fails, estimate
+      extrinsicsCount = 1; // At least timestamp
+    }
 
     res.json({
       hash: hash.toString(),
-      number: block.block.header.number.toNumber(),
-      parentHash: block.block.header.parentHash.toString(),
-      stateRoot: block.block.header.stateRoot.toString(),
-      extrinsicsRoot: block.block.header.extrinsicsRoot.toString(),
-      extrinsicsCount: block.block.extrinsics.length,
-      timestamp: block.block.extrinsics.find(
-        (ex) => ex.method.section === 'timestamp'
-      )?.method?.args?.[0]?.toString() || null
+      number: header.number.toNumber(),
+      parentHash: header.parentHash.toString(),
+      stateRoot: header.stateRoot.toString(),
+      extrinsicsRoot: header.extrinsicsRoot.toString(),
+      extrinsicsCount: extrinsicsCount,
+      timestamp: timestamp
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// Get block by number
+// Get block by number (avoids extrinsic version 5 decoding errors)
 app.get('/api/chain/block/:number', async (req, res) => {
   try {
     if (!isConnected || !api) {
@@ -159,15 +324,177 @@ app.get('/api/chain/block/:number', async (req, res) => {
 
     const blockNumber = parseInt(req.params.number);
     const hash = await api.rpc.chain.getBlockHash(blockNumber);
-    const block = await api.rpc.chain.getBlock(hash);
+    
+    // Get block header (doesn't require decoding extrinsics)
+    const header = await api.rpc.chain.getHeader(hash);
+    
+    // Count user transactions using events (avoids extrinsic version 5 decoding)
+    let totalExtrinsics = 0;
+    let userTransactionCount = 0;
+    const userTransactions = [];
+    
+    try {
+      // Get events for this block (this works without decoding extrinsics)
+      const events = await api.query.system.events.at(hash);
+
+
+      // Count total extrinsics from events
+      const extrinsicIndices = new Set();
+      events.forEach((record) => {
+        const { phase } = record;
+        if (phase.isApplyExtrinsic) {
+          extrinsicIndices.add(phase.asApplyExtrinsic.toNumber());
+        }
+      });
+      totalExtrinsics = extrinsicIndices.size || 0;
+      
+      // Group events by extrinsic index to combine related information
+      const extrinsicEvents = new Map();
+      const blockLevelEvents = [];
+
+      events.forEach((record) => {
+        const { event, phase } = record;
+
+        if (phase.isApplyExtrinsic) {
+          const extrinsicIndex = phase.asApplyExtrinsic.toNumber();
+
+          // Skip first extrinsic (usually timestamp - system call)
+          if (extrinsicIndex === 0) return;
+
+          if (!extrinsicEvents.has(extrinsicIndex)) {
+            extrinsicEvents.set(extrinsicIndex, []);
+          }
+          extrinsicEvents.get(extrinsicIndex).push(record);
+        } else {
+          // Block-level events (not tied to specific extrinsics)
+          blockLevelEvents.push(record);
+        }
+      });
+
+      // Process each extrinsic's events to extract transaction details
+      for (const [extrinsicIndex, records] of extrinsicEvents) {
+        let transactionData = {
+          extrinsicIndex,
+          blockNumber,
+          section: null,
+          method: null,
+          from: null,
+          to: null,
+          amount: null,
+          fee: null
+        };
+
+
+        // Process all events for this extrinsic
+        for (const record of records) {
+          const { event } = record;
+          const section = event.section;
+
+          // Skip system and timestamp events
+          if (section === 'system' || section === 'timestamp') continue;
+
+          // Set main transaction info - prioritize Transfer events
+          if (!transactionData.section || (section === 'balances' && event.method === 'Transfer')) {
+            transactionData.section = section;
+            transactionData.method = event.method;
+          }
+
+          // Extract data based on event type
+          const eventData = event.data;
+          if (section === 'balances') {
+            if (event.method === 'Transfer' && eventData && eventData.length >= 3) {
+              // balances.Transfer(from, to, amount)
+              transactionData.from = eventData[0]?.toString();
+              transactionData.to = eventData[1]?.toString();
+              transactionData.amount = eventData[2]?.toString();
+            } else if (event.method === 'Withdraw' && eventData && eventData.length >= 2 && !transactionData.from) {
+              // balances.Withdraw(who, amount) - only use if we haven't found a Transfer event
+              transactionData.from = eventData[0]?.toString();
+              transactionData.amount = eventData[1]?.toString();
+            } else if (event.method === 'Deposit' && eventData && eventData.length >= 2 && !transactionData.to) {
+              // balances.Deposit(who, amount) - only use if we haven't found a Transfer event
+              transactionData.to = eventData[0]?.toString();
+              transactionData.amount = eventData[1]?.toString();
+            }
+          } else if (section === 'transactionPayment' && event.method === 'TransactionFeePaid') {
+            // transactionPayment.TransactionFeePaid(who, actualFee, tip)
+            if (eventData && eventData.length >= 2) {
+              transactionData.fee = eventData[1]?.toString(); // actualFee
+            }
+          }
+        }
+
+        // Only add if we have meaningful transaction data
+        if (transactionData.section) {
+          userTransactionCount++;
+          userTransactions.push(transactionData);
+        }
+      }
+
+      // Also process block-level events (events not tied to specific extrinsics)
+      blockLevelEvents.forEach(record => {
+        const { event } = record;
+        const section = event.section;
+
+          if (section !== 'system' && section !== 'timestamp') {
+          let transactionData = {
+            extrinsicIndex: -1, // Block-level event
+            blockNumber,
+            section: event.section,
+            method: event.method,
+            from: null,
+            to: null,
+            amount: null,
+            fee: null
+          };
+
+          // Extract data based on event type
+          const eventData = event.data;
+          if (section === 'balances') {
+            if (event.method === 'Transfer' && eventData && eventData.length >= 3) {
+              // balances.Transfer(from, to, amount)
+              transactionData.from = eventData[0]?.toString();
+              transactionData.to = eventData[1]?.toString();
+              transactionData.amount = eventData[2]?.toString();
+            } else if (event.method === 'Withdraw' && eventData && eventData.length >= 2) {
+              // balances.Withdraw(who, amount) - treat as transaction from this account
+              transactionData.from = eventData[0]?.toString();
+              transactionData.amount = eventData[1]?.toString();
+            } else if (event.method === 'Deposit' && eventData && eventData.length >= 2) {
+              // balances.Deposit(who, amount) - treat as transaction to this account
+              transactionData.to = eventData[0]?.toString();
+              transactionData.amount = eventData[1]?.toString();
+            }
+          } else if (section === 'treasury' && event.method === 'UpdatedInactive') {
+            // treasury.UpdatedInactive - this might be related to fee processing
+            // For now, treat it as a system transaction
+            transactionData.section = 'treasury';
+            transactionData.method = 'UpdatedInactive';
+          }
+
+          if (transactionData.section) {
+            userTransactionCount++;
+            userTransactions.push(transactionData);
+          }
+        }
+      });
+    } catch (eventsError) {
+      // If events query fails, we can't determine transaction count
+      console.log('Events query failed:', eventsError.message);
+      // Estimate: assume at least timestamp extrinsic
+      totalExtrinsics = 1;
+      userTransactionCount = 0;
+    }
 
     res.json({
       hash: hash.toString(),
-      number: block.block.header.number.toNumber(),
-      parentHash: block.block.header.parentHash.toString(),
-      stateRoot: block.block.header.stateRoot.toString(),
-      extrinsicsRoot: block.block.header.extrinsicsRoot.toString(),
-      extrinsicsCount: block.block.extrinsics.length
+      number: header.number.toNumber(),
+      parentHash: header.parentHash.toString(),
+      stateRoot: header.stateRoot.toString(),
+      extrinsicsRoot: header.extrinsicsRoot.toString(),
+      extrinsicsCount: totalExtrinsics,
+      userTransactionCount: userTransactionCount,
+      userTransactions: userTransactions
     });
   } catch (error) {
     res.status(500).json({ error: error.message });

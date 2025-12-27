@@ -1,0 +1,117 @@
+{
+    "taskDefinition": {
+        "taskDefinitionArn": "arn:aws:ecs:us-east-1:294782992350:task-definition/myl1-blockchain-node:2",
+        "containerDefinitions": [
+            {
+                "name": "myl1-node",
+                "image": "294782992350.dkr.ecr.us-east-1.amazonaws.com/myl1-node:latest",
+                "cpu": 0,
+                "portMappings": [
+                    {
+                        "containerPort": 9944,
+                        "hostPort": 9944,
+                        "protocol": "tcp"
+                    },
+                    {
+                        "containerPort": 9933,
+                        "hostPort": 9933,
+                        "protocol": "tcp"
+                    },
+                    {
+                        "containerPort": 30333,
+                        "hostPort": 30333,
+                        "protocol": "tcp"
+                    }
+                ],
+                "essential": true,
+                "environment": [
+                    {
+                        "name": "CHAIN",
+                        "value": "local"
+                    },
+                    {
+                        "name": "WS_EXTERNAL",
+                        "value": "true"
+                    },
+                    {
+                        "name": "NODE_NAME",
+                        "value": "myl1-aws-node"
+                    },
+                    {
+                        "name": "RPC_EXTERNAL",
+                        "value": "true"
+                    }
+                ],
+                "mountPoints": [],
+                "volumesFrom": [],
+                "logConfiguration": {
+                    "logDriver": "awslogs",
+                    "options": {
+                        "awslogs-group": "/ecs/myl1-blockchain-node",
+                        "awslogs-region": "us-east-1",
+                        "awslogs-stream-prefix": "ecs"
+                    }
+                },
+                "healthCheck": {
+                    "command": [
+                        "CMD-SHELL",
+                        "curl -f http://localhost:9933/health || exit 1"
+                    ],
+                    "interval": 30,
+                    "timeout": 5,
+                    "retries": 3,
+                    "startPeriod": 60
+                },
+                "systemControls": []
+            }
+        ],
+        "family": "myl1-blockchain-node",
+        "executionRoleArn": "arn:aws:iam::294782992350:role/aws-service-role/ecs.amazonaws.com/AWSServiceRoleForECS",
+        "networkMode": "awsvpc",
+        "revision": 2,
+        "volumes": [],
+        "status": "ACTIVE",
+        "requiresAttributes": [
+            {
+                "name": "com.amazonaws.ecs.capability.logging-driver.awslogs"
+            },
+            {
+                "name": "ecs.capability.execution-role-awslogs"
+            },
+            {
+                "name": "com.amazonaws.ecs.capability.ecr-auth"
+            },
+            {
+                "name": "com.amazonaws.ecs.capability.docker-remote-api.1.19"
+            },
+            {
+                "name": "ecs.capability.container-health-check"
+            },
+            {
+                "name": "ecs.capability.execution-role-ecr-pull"
+            },
+            {
+                "name": "com.amazonaws.ecs.capability.docker-remote-api.1.18"
+            },
+            {
+                "name": "ecs.capability.task-eni"
+            },
+            {
+                "name": "com.amazonaws.ecs.capability.docker-remote-api.1.29"
+            }
+        ],
+        "placementConstraints": [],
+        "compatibilities": [
+            "EC2",
+            "FARGATE",
+            "MANAGED_INSTANCES"
+        ],
+        "requiresCompatibilities": [
+            "FARGATE"
+        ],
+        "cpu": "2048",
+        "memory": "4096",
+        "registeredAt": "2025-12-25T20:38:33.016000+00:00",
+        "registeredBy": "arn:aws:iam::294782992350:user/myl1dev"
+    }
+}
