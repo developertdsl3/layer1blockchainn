@@ -45,3 +45,8 @@ wallet/build/
 /artifacts/
 /target/
 *.wasm
+/artifacts/
+/target/
+*.wasm
+/node/
+/runtime/wasm
