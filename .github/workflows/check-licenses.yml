@@ -24,8 +24,8 @@ jobs:
       NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Checkout sources
-        uses: actions/checkout@6d193bf28034eafb982f37bd894289fe649468fc # v4.1.7
-      - uses: actions/setup-node@v4.1.0
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.1.7
+      - uses: actions/setup-node@v7
         with:
           node-version: "18.x"
           registry-url: "https://npm.pkg.github.com"
@@ -62,8 +62,8 @@ jobs:
       NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Checkout sources
-        uses: actions/checkout@6d193bf28034eafb982f37bd894289fe649468fc # v4.1.7
-      - uses: actions/setup-node@v4.1.0
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.1.7
+      - uses: actions/setup-node@v7
         with:
           node-version: "18.x"
           registry-url: "https://npm.pkg.github.com"
